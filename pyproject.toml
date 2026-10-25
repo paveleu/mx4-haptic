@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mx4-haptic"
+version = "0.1.0"
+description = "Python mouse events and HID++ haptics for the Logitech MX Master 4 on macOS"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = [
+    "pynput>=1.7.6,<2",
+    "hidapi>=0.15,<1; sys_platform == 'darwin'",
+]
+keywords = ["logitech", "mx-master-4", "mouse", "haptics", "hidpp", "macos"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: MacOS X",
+    "Intended Audience :: Developers",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+]
+
+[project.optional-dependencies]
+dev = [
+    "build>=1.2",
+    "pytest>=8",
+    "ruff>=0.9",
+    "twine>=6",
+]
+
+[project.scripts]
+mx4-haptic = "mx4_haptic.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/paveleu/mx4-haptic"
+Repository = "https://github.com/paveleu/mx4-haptic"
+Issues = "https://github.com/paveleu/mx4-haptic/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
