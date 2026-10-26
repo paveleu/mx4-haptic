@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from typing import Callable
 
@@ -46,6 +47,27 @@ ButtonCallback = Callable[[ButtonEvent], None]
 ScrollCallback = Callable[[ScrollEvent], None]
 
 
+def _darwin_listener_type(base_listener: type) -> type:
+    import Quartz
+
+    class DarwinMouseListener(base_listener):
+        def _handle_message(self, proxy, event_type, event, refcon, *extra):
+            # pynput collapses all macOS "other mouse" buttons to Button.middle.
+            # Read their native number before that conversion, retaining its event tap.
+            if event_type not in (Quartz.kCGEventOtherMouseDown, Quartz.kCGEventOtherMouseUp):
+                return super()._handle_message(proxy, event_type, event, refcon, *extra)
+
+            number = int(
+                Quartz.CGEventGetIntegerValueField(event, Quartz.kCGMouseEventButtonNumber)
+            )
+            name = {2: "middle", 3: "x1", 4: "x2"}.get(number, f"button_{number}")
+            x, y = Quartz.CGEventGetLocation(event)
+            # pynput 1.8 adds an injected-event argument; 1.7 has no extra argument.
+            self.on_click(x, y, name, event_type == Quartz.kCGEventOtherMouseDown, *extra)
+
+    return DarwinMouseListener
+
+
 class MouseEvents:
     """Listen for system mouse clicks and scroll deltas.
 
@@ -68,7 +90,7 @@ class MouseEvents:
         self._listener = None
 
     def start(self) -> MouseEvents:
-        """Start listening in the background and return this listener."""
+        """Start listening, wait until ready, and return this listener."""
         if self._listener is not None and self._listener.is_alive():
             return self
 
@@ -92,12 +114,16 @@ class MouseEvents:
                 # The OS provides deltas, but does not identify which physical wheel moved.
                 self.on_scroll(ScrollEvent(float(x), float(y), float(dx), float(dy)))
 
-        self._listener = mouse.Listener(
+        listener_type = mouse.Listener
+        if sys.platform == "darwin":
+            listener_type = _darwin_listener_type(listener_type)
+        self._listener = listener_type(
             on_click=on_click,
             on_scroll=on_scroll,
             suppress=self.suppress,
         )
         self._listener.start()
+        self._listener.wait()
         return self
 
     def stop(self) -> None:

@@ -30,7 +30,7 @@ with MXMaster4(on_button=on_button, on_scroll=on_scroll) as mx4:
     mx4.join()  # Run until the listener is stopped or the process exits.
 ```
 
-`event.phase` is `"down"` or `"up"`. `event.button` is the button name reported by macOS, such as `left`, `right`, `middle`, `x1`, or `x2`. Scroll events carry raw `dx` and `dy` deltas; `event.axis` is `horizontal`, `vertical`, `both`, or `none`. macOS does not identify which physical wheel produced a delta, and Natural Scrolling can affect its sign.
+`event.phase` is `"down"` or `"up"`. `event.button` uses `left`, `right`, and `middle` for standard buttons. macOS button numbers 3 and 4 map to `x1` and `x2`; higher numbers use `button_<number>`. Scroll events carry raw `dx` and `dy` deltas; `event.axis` is `horizontal`, `vertical`, `both`, or `none`. macOS does not identify which physical wheel produced a delta, and Natural Scrolling can affect its sign.
 
 The listener needs macOS Input Monitoring or Accessibility permission. These are OS-level events: a hardware control is available only if macOS exposes it as a mouse event. Raw HID++ button diversion is not included yet.
 

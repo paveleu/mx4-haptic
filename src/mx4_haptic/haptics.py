@@ -173,14 +173,21 @@ class HapticController:
         ]
         # Pad the payload so every write is a complete 20-byte HID++ long report.
         packet.extend([0] * (HIDPP_LONG_LENGTH - len(packet)))
-        if device.write(packet) <= 0:
+        try:
+            written = device.write(packet)
+        except OSError as exc:
+            raise HapticError(f"Could not write the HID++ report: {exc}") from exc
+        if written <= 0:
             raise HapticError("macOS did not accept the HID++ report.")
 
         deadline = time.monotonic() + self.timeout
-        expected_functions = {function & 0x0F, (function + 1) & 0x0F}
+        expected_address = packet[3]
         while time.monotonic() < deadline:
             remaining_ms = max(1, min(400, int((deadline - time.monotonic()) * 1000)))
-            raw = device.read(64, remaining_ms)
+            try:
+                raw = device.read(64, remaining_ms)
+            except OSError as exc:
+                raise HapticError(f"Could not read the HID++ response: {exc}") from exc
             if not raw or len(raw) < 7:
                 continue
 
@@ -195,17 +202,14 @@ class HapticController:
 
             reply_feature = report[2]
             reply_address = report[3]
-            reply_function = reply_address >> 4
-            reply_software_id = reply_address & 0x0F
             if reply_feature == 0xFF:
-                code = report[5] if len(report) > 5 else 0
+                # Errors echo the original feature and function/software address in bytes 3–4.
+                if report[3] != feature_index or report[4] != expected_address:
+                    continue
+                code = report[5]
                 raise HapticError(f"Device returned HID++ error 0x{code:02X}.")
 
-            if (
-                reply_feature == feature_index
-                and reply_software_id == SOFTWARE_ID
-                and reply_function in expected_functions
-            ):
+            if reply_feature == feature_index and reply_address == expected_address:
                 return report[4:]
 
         raise HapticError(
