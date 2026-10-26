@@ -24,4 +24,4 @@ __all__ = [
     "Waveform",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.1.2"

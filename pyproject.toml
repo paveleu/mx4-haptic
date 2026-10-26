@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mx4-haptic"
-version = "0.1.0"
+version = "0.1.2"
 description = "Python mouse events and HID++ haptics for the Logitech MX Master 4 on macOS"
 readme = "README.md"
 license = "MIT"

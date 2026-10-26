@@ -89,7 +89,7 @@ Before the first release, add a pending Trusted Publisher in your PyPI account. 
 - Workflow: `publish.yml`
 - Environment: `pypi`
 
-Then update the version in `pyproject.toml`, push the commit, and publish a GitHub Release for the matching tag, for example `v0.1.0`. The release workflow builds and checks the package, then publishes the built files to PyPI.
+Then update the version in `pyproject.toml` and `src/mx4_haptic/__init__.py`, push the commit, and publish a GitHub Release for the matching tag, for example `v0.1.2`. The release workflow builds and checks the package, then publishes the built files to PyPI.
 
 ## License
 
