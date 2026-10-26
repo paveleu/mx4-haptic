@@ -37,6 +37,7 @@ def test_resolve_waveform_rejects_invalid_values(value):
 
 
 def test_hidpp_request_writes_long_report_and_matches_reply():
+    # Model a long-report response for feature 0x0B and the function-4 waveform trigger.
     response = [0x11, 0xFF, 0x0B, 0x41, 0x01, *([0] * 15)]
     device = FakeHID(response)
     controller = HapticController(timeout=0.01)
@@ -49,6 +50,7 @@ def test_hidpp_request_writes_long_report_and_matches_reply():
 
 
 def test_hidpp_request_surfaces_device_error():
+    # HID++ uses feature index 0xFF in the response header for device-level errors.
     device = FakeHID([0x11, 0xFF, 0xFF, 0x81, 0, 0x05, 0])
     controller = HapticController(timeout=0.01)
 

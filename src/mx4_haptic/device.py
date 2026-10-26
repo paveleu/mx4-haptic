@@ -21,6 +21,7 @@ class MXMaster4(MouseEvents):
         suppress: bool = False,
     ) -> None:
         super().__init__(on_button, on_scroll, suppress=suppress)
+        # The controller opens HID lazily, so event-only use does not claim a device handle.
         self.haptics = HapticController()
 
     def close(self) -> None:

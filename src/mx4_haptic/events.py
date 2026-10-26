@@ -80,6 +80,8 @@ class MouseEvents:
         def on_click(x: float, y: float, button: object, pressed: bool) -> None:
             if self.on_button is None:
                 return
+
+            # Expose plain button names instead of leaking pynput's enum type to callers.
             name = getattr(button, "name", None)
             if name is None:
                 name = str(button).removeprefix("Button.")
@@ -87,6 +89,7 @@ class MouseEvents:
 
         def on_scroll(x: float, y: float, dx: float, dy: float) -> None:
             if self.on_scroll is not None:
+                # The OS provides deltas, but does not identify which physical wheel moved.
                 self.on_scroll(ScrollEvent(float(x), float(y), float(dx), float(dy)))
 
         self._listener = mouse.Listener(

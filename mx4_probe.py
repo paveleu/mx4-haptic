@@ -16,19 +16,19 @@ def list_devices() -> None:
 
     devices = hid.enumerate(LOGITECH_VID, 0)
     if not devices:
-        print("Nie znaleziono teraz interfejsów HID Logitech (VID 046D).")
-        print("Sprawdź, czy MX Master 4 jest włączona i połączona przez Bluetooth albo Bolt.")
+        print("No Logitech HID interfaces found (VID 046D).")
+        print("Check that the MX Master 4 is powered on and connected over Bluetooth or Bolt.")
         return
 
-    print(f"Interfejsy HID Logitech: {len(devices)}")
+    print(f"Logitech HID interfaces: {len(devices)}")
     for number, device in enumerate(devices, start=1):
-        product = device.get("product_string") or "(brak nazwy)"
+        product = device.get("product_string") or "(unnamed device)"
         path = device.get("path")
         if isinstance(path, bytes):
             path = path.decode("utf-8", errors="replace")
         print(f"\n{number}. {product}")
         print(f"   PID: 0x{device.get('product_id', 0):04x}")
-        print(f"   Interfejs: {device.get('interface_number', 'n/a')}")
+        print(f"   Interface: {device.get('interface_number', 'n/a')}")
         print(
             f"   Usage page / usage: {device.get('usage_page', 'n/a')} / "
             f"{device.get('usage', 'n/a')}"
@@ -37,19 +37,19 @@ def list_devices() -> None:
 
 
 def watch_mouse_events() -> None:
-    print("Nasłuchuję zdarzeń myszy widocznych dla macOS. Ctrl+C kończy.")
-    print("Kliknij po kolei dodatkowe przyciski; wynik pokaże nazwę zdarzenia.")
+    print("Listening for mouse events reported by macOS. Press Ctrl+C to stop.")
+    print("Click each extra mouse button to see the event name reported by the system.")
 
     def on_button(event) -> None:
         print(
-            f"{event.phase:4}  button={event.button:12}  pozycja=({event.x}, {event.y})",
+            f"{event.phase:4}  button={event.button:12}  position=({event.x}, {event.y})",
             flush=True,
         )
 
     def on_scroll(event) -> None:
         print(
             f"scroll  dx={event.dx:+g}  dy={event.dy:+g}  "
-            f"pozycja=({event.x}, {event.y})",
+            f"position=({event.x}, {event.y})",
             flush=True,
         )
 
@@ -62,7 +62,7 @@ def main() -> None:
     parser.add_argument(
         "--watch",
         action="store_true",
-        help="po wylistowaniu urządzeń nasłuchuj zdarzeń myszy widocznych dla macOS",
+        help="listen for mouse events reported by macOS after listing devices",
     )
     args = parser.parse_args()
 

@@ -12,6 +12,7 @@ LOGITECH_VID = 0x046D
 MX_MASTER_4_PID = 0xB042
 HIDPP_USAGE_PAGE_MIN = 0xFF00
 
+# HID++ long reports have a fixed width; 0xFF addresses the direct Bluetooth connection.
 HIDPP_LONG_REPORT = 0x11
 HIDPP_LONG_LENGTH = 20
 DIRECT_BLUETOOTH_DEVICE_INDEX = 0xFF
@@ -128,6 +129,7 @@ class HapticController:
             device = hid.device()
             try:
                 device.open_path(info["path"])
+                # Feature Root resolves the haptics feature ID to this device's feature index.
                 response = self._request_on(
                     device,
                     DIRECT_BLUETOOTH_DEVICE_INDEX,
@@ -161,6 +163,7 @@ class HapticController:
         params: list[int] | None = None,
     ) -> list[int]:
         params = params or []
+        # The header byte packs the function in its upper nibble and this client's ID below.
         packet = [
             HIDPP_LONG_REPORT,
             device_index,
@@ -168,6 +171,7 @@ class HapticController:
             ((function & 0x0F) << 4) | SOFTWARE_ID,
             *[value & 0xFF for value in params[: HIDPP_LONG_LENGTH - 4]],
         ]
+        # Pad the payload so every write is a complete 20-byte HID++ long report.
         packet.extend([0] * (HIDPP_LONG_LENGTH - len(packet)))
         if device.write(packet) <= 0:
             raise HapticError("macOS did not accept the HID++ report.")
@@ -182,6 +186,7 @@ class HapticController:
 
             report = list(raw)
             reply_device = report[1]
+            # Some Bluetooth replies identify the device as slot 0 instead of the 0xFF address.
             is_our_device = reply_device == device_index or (
                 device_index == DIRECT_BLUETOOTH_DEVICE_INDEX and reply_device == 0
             )
@@ -233,6 +238,7 @@ class HapticController:
             response = self._request(0)
             if len(response) < 8:
                 raise HapticError("The haptic capability response was too short.")
+            # Each bit in this big-endian bitmap advertises support for the matching waveform ID.
             mask = int.from_bytes(bytes(response[4:8]), "big")
             supported: list[Waveform | int] = []
             for wave_id in range(32):
@@ -252,6 +258,7 @@ class HapticController:
                 raise HapticError(f"The mouse does not advertise waveform ID {wave_id}.")
             if not self.get_state().enabled:
                 raise HapticError("Haptics are disabled in the mouse configuration.")
+            # Confirm the actuator is idle before sending the waveform trigger.
             status = self._request(3)
             if not status or status[0] != 0:
                 raw_status = status[0] if status else "missing"
@@ -268,6 +275,7 @@ class HapticController:
             raise ValueError("level must be an integer between 0 and 100")
         with self._lock:
             current = self.get_state()
+            # Keep enable/mode flags intact while changing only the intensity byte.
             response = self._request(2, [current.flags, level, 0])
             if len(response) < 2 or response[1] != level:
                 actual = response[1] if len(response) >= 2 else "missing"
